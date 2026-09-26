@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQLCraft - Real Grammar SQL Simulator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #020617;
+            --bg-card: #0f172a;
+            --bg-card-sub: #020617;
+            --border: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --emerald: #10b981;
+            --emerald-hover: #059669;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+        }
+
+        .code-font { font-family: 'Fira Code', monospace; }
+
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            background-color: var(--accent);
+            color: white;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-title h1 { font-size: 1.25rem; font-weight: 700; }
+        .logo-title h1 span { color: #818cf8; }
+        .logo-title p { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Language Toggle Switch Styles */
+        .lang-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card-sub);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+        }
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .lang-btn.active {
+            background-color: var(--accent);
+            color: white;
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+        }
+        .lang-btn:hover:not(.active) {
+            color: var(--text-main);
+            background-color: var(--border);
+        }
+
+        .btn {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+        .btn-secondary { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-secondary:hover { background-color: var(--border); color: var(--text-main); }
+        .btn-danger { background-color: rgba(244, 63, 94, 0.1); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+        .btn-danger:hover { background-color: var(--rose); color: white; }
+
+        /* Caution Notice Banner */
+        .caution-banner {
+            background-color: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: #fcd34d;
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.875rem;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.05);
+        }
+        .caution-banner i {
+            font-size: 1.2rem;
+            color: var(--amber);
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+        .caution-banner strong { color: #ffffff; }
+        .caution-banner code {
+            background: rgba(245, 158, 11, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #fef08a;
+        }
+
+        /* App Layout Container */
+        .app-layout {
+            display: flex;
+            flex: 1;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Side Menu */
+        .side-menu {
+            width: 260px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+     /* Custom Dropdown Styles for Mobile & Desktop */
+.custom-dropdown {
+    position: relative;
+    width: 150px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+.dropdown-selected {
+    background: var(--bg-card-sub);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dropdown-selected:hover {
+    border-color: var(--accent);
+    background-color: rgba(99, 102, 241, 0.08);
+}
+
+.dropdown-options-box {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    width: 100%;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.dropdown-options-box.show {
+    display: block;
+}
+
+.dropdown-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.4);
+}
+
+.dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.dropdown-option:hover {
+    background-color: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+}
+
+
+
+/* Custom Modal Popup Background */
+.custom-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Custom Modal Card */
+.custom-modal-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.custom-modal-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.custom-modal-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+.custom-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+
+        .menu-category {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 12px 12px 6px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(30, 41, 59, 0.5);
+            color: var(--text-main);
+        }
+
+        .menu-item.active {
+            background-color: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            border-left: 3px solid var(--accent);
+        }
+
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* Main Content View Container */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .view-panel {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .view-panel.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Grid Workspace */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .db-status {
+            font-size: 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            margin-bottom: 12px;
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .schema-table-box {
+            background-color: var(--bg-card-sub);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .schema-table-header {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #818cf8;
+            margin-bottom: 6px;
+        }
+        .schema-columns {
+            list-style: none;
+            padding-left: 8px;
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .schema-columns li {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .workspace-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        
+        label { font-size: 0.875rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+
+        textarea {
+            width: 100%;
+            background-color: var(--bg-card-sub);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            color: var(--text-main);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+        }
+        textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+        .editor-footer { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .status-text { font-size: 0.75rem; color: var(--text-muted); }
+
+        .btn-run {
+            background-color: var(--emerald);
+            color: white;
+            font-weight: 600;
+            padding: 10px 22px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn-run:hover { background-color: var(--emerald-hover); }
+
+        .results-wrapper { flex: 1; display: flex; flex-direction: column; min-height: 300px; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .row-count-badge { font-size: 0.75rem; background-color: var(--border); color: var(--text-muted); padding: 3px 10px; border-radius: 9999px; }
+
+        .results-box {
+            flex: 1;
+            overflow: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background-color: rgba(2, 6, 23, 0.5);
+            max-height: 400px;
+        }
+
+        .empty-results {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 180px;
+            color: var(--text-muted);
+            gap: 10px;
+        }
+        .empty-results i { font-size: 2rem; opacity: 0.3; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8125rem; }
+        th {
+            background-color: var(--bg-card);
+            color: #cbd5e1;
+            text-transform: uppercase;
+            font-size: 0.6875rem;
+            letter-spacing: 0.05em;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+        }
+        td { padding: 10px 14px; border-bottom: 1px solid rgba(30, 41, 59, 0.6); color: #cbd5e1; }
+        tbody tr:nth-child(even) { background-color: rgba(2, 6, 23, 0.3); }
+
+        .syntax-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .syntax-card {
+            background: var(--bg-card-sub);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+        }
+        .syntax-card h4 { font-size: 0.875rem; color: #818cf8; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .syntax-card code { color: #f8fafc; background: rgba(99, 102, 241, 0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.78rem; display: block; margin-top: 4px; line-height: 1.4; }
+
+        /* About Us View Styles */
+        .about-hero {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(to bottom, rgba(99, 102, 241, 0.08), transparent);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        .about-hero h2 { font-size: 2rem; font-weight: 700; margin-bottom: 12px; }
+        .about-hero h2 span { color: #818cf8; }
+        .about-hero p { color: var(--text-muted); max-width: 650px; margin: 0 auto; font-size: 0.95rem; }
+
+        .about-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .feature-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+        }
+        .feature-box i { font-size: 1.5rem; color: #818cf8; margin-bottom: 12px; }
+        .feature-box h3 { font-size: 1rem; margin-bottom: 8px; }
+        .feature-box p { font-size: 0.85rem; color: var(--text-muted); }
+
+        footer {
+    background-color: var(--bg-card);
+    border-top: 1px solid var(--border);
+    padding: 24px 32px;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-logo-text {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+.footer-logo-text span {
+    color: #818cf8;
+}
+
+.footer-version {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.footer-links {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+    font-size: 1rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(30, 41, 59, 0.5);
+    padding-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.75rem;
+}
+
+
+
+        @media (max-width: 768px) {
+            .app-layout { flex-direction: column; }
+            .side-menu { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; gap: 4px; }
+            .menu-category { display: none; }
+            .menu-item { white-space: nowrap; padding: 8px 12px; }
+            .menu-item.active { border-left: none; border-bottom: 3px solid var(--accent); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fa-solid fa-database"></i></div>
+            <div class="logo-title">
+                <h1>SQL<span>Craft</span></h1>
+                <p data-i18n="logoSub">Native SQL Grammar Simulator</p>
+            </div>
+        </div>
+
+        <div class="lang-toggle">
+            <button id="lang-en" class="lang-btn active" onclick="setLanguage('en')">EN</button>
+            <button id="lang-si" class="lang-btn" onclick="setLanguage('si')">සිං</button>
+        </div>
+    </header>
+
+    
+    <div class="app-layout">
+        
+        <nav class="side-menu">
+            <div class="menu-category" data-i18n="navCat">Navigation</div>
+            <button class="menu-item active" onclick="switchView('workspace', this)">
+                <i class="fa-solid fa-terminal"></i> <span data-i18n="navWorkspace">Query Workspace</span>
+            </button>
+            <button class="menu-item" onclick="switchView('explorer', this)">
+                <i class="fa-solid fa-sitemap"></i> <span data-i18n="navExplorer">DB Schema Explorer</span>
+            </button>
+            <button class="menu-item" onclick="switchView('syntax', this)">
+                <i class="fa-solid fa-book"></i> <span data-i18n="navSyntax">Syntax Reference</span>
+            </button>
+            <button class="menu-item" onclick="switchView('about', this)">
+                <i class="fa-solid fa-circle-info"></i> <span data-i18n="navAbout">About Us</span>
+            </button>
+        </nav>
+
+        
+        <main class="main-content">
+            
+            <!-- Custom Confirmation Modal Box -->
+<div id="custom-modal" class="custom-modal-overlay">
+    <div class="custom-modal-card">
+        <div class="custom-modal-title">
+            <i class="fa-solid fa-triangle-exclamation" style="color: var(--rose);"></i>
+            <span id="modal-title-text">Confirm Reset</span>
+        </div>
+        <p id="modal-desc-text" class="custom-modal-desc">Are you sure you want to clear all stored databases and tables?</p>
+        <div class="custom-modal-actions">
+            <button id="modal-btn-cancel" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">Cancel</button>
+            <button id="modal-btn-confirm" class="btn btn-danger" style="padding: 6px 14px; font-size: 0.8rem;">Yes, Clear</button>
+        </div>
+    </div>
+</div>
+
+            <!-- Contact Developer Modal Box -->
+<div id="contact-modal" class="custom-modal-overlay">
+    <div class="custom-modal-card" style="text-align: center; padding: 28px 24px;">
+        <div style="font-size: 2.2rem; color: #25d366; margin-bottom: 8px;">
+            <i class="fa-brands fa-whatsapp"></i>
+        </div>
+        <div class="custom-modal-title" style="justify-content: center; font-size: 1.1rem; margin-bottom: 6px;">
+            <span data-i18n="contactModalTitle">Contact Developer?</span>
+        </div>
+        <p class="custom-modal-desc" data-i18n="contactModalDesc" style="margin-bottom: 16px;">
+            Have questions or need help with SQLCraft? Chat with Bhashana Sandesh directly on WhatsApp!
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="closeContactModal()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" data-i18n="btnCancel">Cancel</button>
+            <a href="https://wa.me/94740941070?text=Hi%20Bhashana,%20I%20have%20a%20question%20about%20SQLCraft." target="_blank" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.85rem; background-color: #25d366; text-decoration: none;" onclick="closeContactModal()">
+                <i class="fa-brands fa-whatsapp"></i> <span data-i18n="btnChatWhatsapp">Chat on WhatsApp</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+            
+            <div class="caution-banner">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div data-i18n="cautionText">
+                    <strong>Caution Note:</strong> This is <strong>not a real database server</strong>. This is only a practicing simulator created by <strong>Bhashana Sandesh</strong> to practice MySQL database management fundamentals. If you want to create a real relational database, please use local server environments like <code>Wamp</code>, <code>Termux</code>, <code>XAMPP</code>, or any other server.
+                </div>
+            </div>
+
+           
+            <section id="view-workspace" class="view-panel active">
+                <div class="workspace-grid">
+                    <div class="card">
+                        <div class="workspace-header">
+                            <label for="sql-input">
+                                <i class="fa-solid fa-code" style="color: var(--emerald);"></i> <span data-i18n="consoleTitle">SQL Query Console</span>
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="clearLocalStorage()" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" title="Reset all databases">
+                                    <i class="fa-solid fa-database"></i> <span data-i18n="btnResetDb">Reset Storage</span>
+                                </button>
+                                <button onclick="clearEditor()" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;">
+                                    <i class="fa-solid fa-trash-can"></i> <span data-i18n="btnClear">Clear</span>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea id="sql-input" rows="5" class="code-font" placeholder="Type your SQL query here..."></textarea>
+                        
+                        <div class="editor-footer">
+                            <span id="query-status" class="status-text" data-i18n="statusReady">Ready.</span>
+                            <button onclick="runQuery()" class="btn-run">
+                                <i class="fa-solid fa-play"></i> <span data-i18n="btnRun">Run Query</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card results-wrapper">
+                        <div class="results-header">
+                            <span style="font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
+                                <i class="fa-solid fa-table" style="color: #818cf8; margin-right: 6px;"></i> <span data-i18n="outputTitle">Execution Output</span>
+                            </span>
+                            <span id="row-count" class="row-count-badge">0 rows</span>
+                        </div>
+                        <div id="results-container" class="results-box">
+                            <div class="empty-results">
+                                <i class="fa-solid fa-database"></i>
+                                <p style="font-size: 0.85rem;" data-i18n="emptyOutput">Execute a command to see results.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+           
+            <section id="view-explorer" class="view-panel">
+                <div class="card">
+                    <div class="card-title">
+                        <span><i class="fa-solid fa-sitemap" style="color: #818cf8; margin-right: 6px;"></i> <span data-i18n="explorerHeader">Active Database Explorer</span></span>
+                    </div>
+                    <div id="db-active-indicator" class="db-status">
+                        <i class="fa-solid fa-circle-nodes"></i> <span data-i18n="activeDbNone">Active DB: None Selected</span>
+                    </div>
+                    <div id="schema-viewer" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 12px;">
+                        No database selected or created yet. Start with <code style="color:#818cf8">CREATE DATABASE name;</code>
+                    </div>
+                </div>
+            </section>
+
+            
+            <section id="view-syntax" class="view-panel">
+                <div class="card">
+                    <div class="card-title">
+                        <span><i class="fa-solid fa-book" style="color: #f59e0b; margin-right: 6px;"></i> <span data-i18n="syntaxHeader">Supported MySQL Syntax & Data Types Reference</span></span>
+                    </div>
+                    <div class="syntax-guide-grid">
+                        <div class="syntax-card">
+                            <h4><i class="fa-solid fa-database"></i> <span data-i18n="synCat1">Databases</span></h4>
+                            <code>CREATE;</code>
+                            <code>USE;</code>
+                            <code>ALTER;</code>
+                            <code>SHOW;</code>
+                            <code>DROP;</code>
+                            <code>ADD;</code>
+                            <code>MODIFY;</code>
+                            <code>DESCRIBE;</code>
+                            <code>CHECK;</code>
+                            <code>REFERENCES;</code>
+                            <code>INSERT;</code>
+                            <code>SELECT;</code>
+                            <code>UPDATE;</code>
+                            <code>DELETE;</code>
+                        </div>
+                       
+                        <div class="syntax-card">
+                            <h4><i class="fa-solid fa-hashtag"></i> <span data-i18n="synCat3">Numeric Data Types</span></h4>
+                            <code>INT / INTEGER (Standard integer numbers)</code>
+                            <code>AUTO_INCREMENT (Automated number raws)</code>
+                            <code>BIGINT (Large whole numbers)</code>
+                            <code>FLOAT / DOUBLE (Floating-point numbers)</code>
+                            <code>DECIMAL(M, D) (Exact fixed-point decimals)</code>
+                        </div>
+                        <div class="syntax-card">
+                            <h4><i class="fa-solid fa-font"></i> <span data-i18n="synCat4">String & Text Types</span></h4>
+                            <code>VARCHAR(n) (Variable-length string)</code>
+                            <code>CHAR(n) (Fixed-length string)</code>
+                            <code>TEXT / LONGTEXT (Long text blocks)</code>
+                        </div>
+                        <div class="syntax-card">
+                            <h4><i class="fa-solid fa-calendar-days"></i> <span data-i18n="synCat5">Date & Time Types</span></h4>
+                            <code>DATE (Format: YYYY-MM-DD)</code>
+                            <code>DATETIME / TIMESTAMP (Date & Time)</code>
+                            <code>TIME (Format: HH:MM:SS)</code>
+                            <code>YEAR (Format: YYYY)</code>
+                        </div>
+                        <div class="syntax-card">
+                            <h4><i class="fa-solid fa-toggle-on"></i> <span data-i18n="synCat6">Boolean & Operations</span></h4>
+                            <code>BOOLEAN / BOOL (True/False values)</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            
+            <section id="view-about" class="view-panel">
+                <div class="about-hero">
+                    <h2 data-i18n="aboutWelcome">Welcome to <span>SQLCraft</span></h2>
+                    <p data-i18n="aboutDesc">A lightning-fast, zero-setup in-memory MySQL grammar simulator built entirely for developers, students, and educators.</p>
+                    <!-- මෙය වෙනස් කරන්න -->
+<div style="margin-top: 15px; font-size: 0.9rem; color: #818cf8; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="openContactModal()" title="Click to contact developer">
+    <i class="fa-solid fa-user-graduate"></i> <span data-i18n="aboutCreator">Created by Bhashana Sandesh</span>
+</div>
+
+                </div>
+                
+                <div class="about-features">
+                    <div class="feature-box">
+                        <i class="fa-solid fa-bolt"></i>
+                        <h3 data-i18n="feat1Title">100% Client-Side</h3>
+                        <p data-i18n="feat1Desc">Runs directly inside your browser using pure JavaScript memory storage without needing any backend server infrastructure.</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <h3 data-i18n="feat2Title">Learn & Practice</h3>
+                        <p data-i18n="feat2Desc">Ideal for learning fundamental SQL commands, relational schemas, database navigation, and table structure manipulations safely.</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="fa-solid fa-code-compare"></i>
+                        <h3 data-i18n="feat3Title">Advanced Engine</h3>
+                        <p data-i18n="feat3Desc">Supports all standard MySQL data types, auto-incrementing identifiers, check constraints, column alterations, sorting, and row limits seamlessly.</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer>
+    <div class="footer-container">
+        <div class="footer-brand">
+            <span class="footer-logo-text">SQL<span>Craft</span> Engine</span>
+            <span class="footer-version">V1.0.5</span>
+        </div>
+        <div class="footer-links">
+            <a href="#" target="_blank" title="Portfolio"><i class="fa-solid fa-globe"></i></a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span data-i18n="footerAuthor">Developed With &hearts; By Bhashana Sandesh</span>
+        <span>&copy; <span id="current-year"></span> <span data-i18n="footerRights">All Rights Reserved</span></span>
+    </div>
+</footer>
+
+
+
+    
+    <script>
+        
+        let dbState = {
+            databases: {},
+            currentDb: null
+        };
+
+        const savedStorage = localStorage.getItem('sqlcraft_persistent_state');
+        if (savedStorage) {
+            try {
+                dbState = JSON.parse(savedStorage);
+            } catch (e) {
+                console.error("Could not parse localStorage data", e);
+            }
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem('sqlcraft_persistent_state', JSON.stringify(dbState));
+        }
+
+        function clearLocalStorage() {
+    const modal = document.getElementById('custom-modal');
+    const titleEl = document.getElementById('modal-title-text');
+    const descEl = document.getElementById('modal-desc-text');
+    const confirmBtn = document.getElementById('modal-btn-confirm');
+    const cancelBtn = document.getElementById('modal-btn-cancel');
+
+   
+    titleEl.textContent = currentLang === 'si' ? "ගබඩාව හිස් කිරීම තහවුරු කරන්න" : "Confirm Storage Reset";
+    descEl.textContent = currentLang === 'si' 
+        ? "ඔබට විශ්වාසද සියලුම දත්ත සමුදායන් (Databases) සහ වගු මකා දැමීමට අවශ්‍ය බව? මෙම ක්‍රියාව ආපසු හැරවිය නොහැක." 
+        : "Are you sure you want to clear all stored databases and tables? This action cannot be undone.";
+    confirmBtn.textContent = currentLang === 'si' ? "ඔව්, මකන්න" : "Yes, Clear";
+    cancelBtn.textContent = currentLang === 'si' ? "අවලංගු කරන්න" : "Cancel";
+
+    modal.style.display = 'flex';
+
+   
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    newConfirmBtn.onclick = () => {
+        localStorage.removeItem('sqlcraft_persistent_state');
+        dbState = { databases: {}, currentDb: null };
+        updateExplorer();
+        document.getElementById('query-status').textContent = currentLang === 'si' ? "ගබඩාව (Storage) හිස් කරන ලදී." : "Storage cleared.";
+        document.getElementById('query-status').style.color = "var(--rose)";
+        modal.style.display = 'none';
+    };
+
+    newCancelBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+}
+
+function updateExplorer() {
+    const indicator = document.getElementById('db-active-indicator');
+    const viewer = document.getElementById('schema-viewer');
+
+    if (!dbState.currentDb || !dbState.databases[dbState.currentDb]) {
+        indicator.innerHTML = `<i class="fa-solid fa-circle-nodes"></i> ${currentLang === 'si' ? 'සක්‍රීය දත්ත සමුදාය: කිසිවක් තෝරා නැත' : 'Active DB: None Selected'}`;
+        viewer.innerHTML = currentLang === 'si' 
+            ? `කිසිදු දත්ත සමුදායක් තෝරා නැත. වැඩබිම් කොන්සෝලය තුළ <code style="color:#818cf8">USE db_name;</code> හෝ <code style="color:#818cf8">CREATE DATABASE db_name;</code> භාවිතා කරන්න.`
+            : `No database selected. Use <code style="color:#818cf8">USE db_name;</code> or <code style="color:#818cf8">CREATE DATABASE db_name;</code> in the workspace console.`;
+        return;
+    }
+
+   
+    let dbListOptions = Object.keys(dbState.databases).map(dbName => 
+        `<div class="dropdown-option" onclick="switchDatabaseFromExplorer('${dbName}')">${dbName}</div>`
+    ).join('');
+
+    indicator.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; width: 100%; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-circle-nodes" style="color: var(--accent);"></i> 
+                <span>${currentLang === 'si' ? 'සක්‍රීය DB:' : 'Active DB:'}</span>
+            </div>
+            <div class="custom-dropdown">
+                <div class="dropdown-selected" onclick="toggleCustomDropdown(event)">
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${dbState.currentDb}</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; color: #818cf8;"></i>
+                </div>
+                <div id="custom-dropdown-options" class="dropdown-options-box">
+                    ${dbListOptions}
+                </div>
+            </div>
+        </div>
+    `;
+
+    const db = dbState.databases[dbState.currentDb];
+    const tables = Object.keys(db.tables);
+
+    if (tables.length === 0) {
+        viewer.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted);">${currentLang === 'si' ? `'${dbState.currentDb}' දත්ත සමුදාය දැනට හිස්ය.` : `Database '${dbState.currentDb}' is currently empty.`}</p>`;
+        return;
+    }
+
+    let html = '';
+    tables.forEach(tableName => {
+        const table = db.tables[tableName];
+        let colsHtml = table.columns.map(c => {
+            let badges = '';
+            if (c.auto_increment) badges += `<sup style="color:var(--amber); margin-left:4px; font-weight:600;">AUTO</sup>`;
+            if (c.is_primary) badges += `<sup style="color:var(--rose); margin-left:4px; font-weight:700;">PRIMARY KEY</sup>`;
+            if (c.is_foreign) badges += `<sup style="color:#3b82f6; margin-left:4px; font-weight:700;">FOREIGN KEY</sup>`;
+
+            return `<li><span>${c.name}${badges}</span><span style="color:#818cf8">${c.type}</span></li>`;
+        }).join('');
+        
+        let checksHtml = table.checks && table.checks.length > 0 ? `<div style="font-size:0.7rem; color:var(--amber); margin-top:4px;">Checks: ${table.checks.map(ch => ch.raw).join(', ')}</div>` : '';
+        html += `
+            <div class="schema-table-box">
+                <div class="schema-table-header"><i class="fa-solid fa-table-cells"></i> ${tableName}</div>
+                <ul class="schema-columns">${colsHtml}</ul>${checksHtml}
+            </div>
+        `;
+    });
+    viewer.innerHTML = html;
+}
+
+function toggleCustomDropdown(event) {
+    event.stopPropagation();
+    const box = document.getElementById('custom-dropdown-options');
+    if (box) {
+        box.classList.toggle('show');
+    }
+}
+
+window.addEventListener('click', () => {
+    const box = document.getElementById('custom-dropdown-options');
+    if (box) {
+        box.classList.remove('show');
+    }
+});
+
+
+       
+        const translations = {
+            en: {
+                logoSub: "Native SQL Grammar Simulator",
+                navCat: "Navigation",
+                navWorkspace: "Query Workspace",
+                navExplorer: "DB Schema Explorer",
+                navSyntax: "Syntax Reference",
+                navAbout: "About Us",
+                cautionText: "<strong>Caution Note:</strong> This is <strong>not a real database server</strong>. This is only a practicing simulator created by <strong>Bhashana Sandesh</strong> to practice MySQL database management fundamentals. If you want to create a real relational database, please use local server environments like <code>Wamp</code>, <code>Termux</code>, <code>XAMPP</code>, or any other server.",
+                consoleTitle: "SQL Query Console",
+                btnClear: "Clear",
+                btnResetDb: "Reset Storage",
+                statusReady: "Ready.",
+                btnRun: "Run Query",
+                outputTitle: "Execution Output",
+                emptyOutput: "Execute a command to see results.",
+                explorerHeader: "Active Database Explorer",
+                activeDbNone: "Active DB: None Selected",
+                syntaxHeader: "Supported MySQL Syntax & Data Types Reference",
+                synCat1: "Databases",
+                synCat2: "Tables & Schema",
+                synCat3: "Numeric Data Types",
+                synCat4: "String & Text Types",
+                synCat5: "Date & Time Types",
+                synCat6: "Boolean & Operations",
+                aboutWelcome: "Welcome to <span>SQLCraft</span>",
+                aboutDesc: "A lightning-fast, zero-setup in-memory MySQL grammar simulator built entirely for developers, students, and educators.",
+                aboutCreator: "Created by Bhashana Sandesh",
+                feat1Title: "100% Client-Side",
+                feat1Desc: "Runs directly inside your browser using pure JavaScript memory storage without needing any backend server infrastructure.",
+                feat2Title: "Learn & Practice",
+                feat2Desc: "Ideal for learning fundamental SQL commands, relational schemas, database navigation, and table structure manipulations safely.",
+                feat3Title: "Advanced Engine",
+                feat3Desc: "Supports all standard MySQL data types, auto-incrementing identifiers, check constraints, column alterations, sorting, and row limits seamlessly.",
+                footerAuthor: "Developed with &hearts; by Bhashana Sandesh",
+footerRights: "All Rights Reserved",
+contactModalTitle: "Contact Developer?",
+contactModalDesc: "Have questions or need help with SQLCraft? Chat with Bhashana Sandesh directly on WhatsApp!",
+btnCancel: "Cancel",
+btnChatWhatsapp: "Chat on WhatsApp"
+
+
+            },
+            si: {
+                logoSub: "දේශීය SQL ව්‍යාකරණ සිමියුලේටරය",
+                navCat: "සංචාලනය",
+                navWorkspace: "විමසුම් වැඩබිම",
+                navExplorer: "දත්ත සමුදා ස්කීමා ගවේෂකය",
+                navSyntax: "ව්‍යාකරණ යොමුව",
+                navAbout: "අප ගැන",
+                cautionText: "<strong>සටහන:</strong> මෙය සැබෑ <strong>දත්ත සමුදා සේවාදායකයක් නොවේ</strong>. මෙය MySQL දත්ත සමුදා කළමනාකරණ මූලධර්ම පුහුණු වීම සඳහා <strong>භාෂණ සංදේශ්</strong> විසින් නිර්මාණය කරන ලද පුහුණු සිමියුලේටරයක් පමණි. ඔබට සැබෑ දත්ත සමුදායක් සෑදීමට අවශ්‍ය නම්, කරුණාකර <code>Wamp</code>, <code>Termux</code>, <code>XAMPP</code> හෝ වෙනත් සේවාදායකයක් භාවිතා කරන්න.",
+                consoleTitle: "SQL විමසුම් කොන්සෝලය",
+                btnClear: "හිස් කරන්න",
+                btnResetDb: "ගබඩාව මකන්න",
+                statusReady: "සූදානම්.",
+                btnRun: "විමසුම ක්‍රියාත්මක කරන්න",
+                outputTitle: "ප්‍රතිදානය",
+                emptyOutput: "ප්‍රතිඵල බැලීමට විධානයක් ක්‍රියාත්මක කරන්න.",
+                explorerHeader: "සක්‍රීය දත්ත සමුදා ගවේෂකය",
+                activeDbNone: "සක්‍රීය දත්ත සමුදාය: කිසිවක් තෝරා නැත",
+                syntaxHeader: "සහාය දක්වන MySQL ව්‍යාකරණ සහ දත්ත වර්ග යොමුව",
+                synCat1: "දත්ත සමුදායන්",
+                synCat2: "වගු සහ ස්කීමාව",
+                synCat3: "සංඛ්‍යා දත්ත වර්ග",
+                synCat4: "අක්ෂර මාලා සහ පෙළ වර්ග",
+                synCat5: "දිනය සහ වේලාව වර්ග",
+                synCat6: "බූලියන් සහ මෙහෙයුම්",
+                aboutWelcome: "<span>SQLCraft</span> වෙත සාදරයෙන් පිළිගනිමු",
+                aboutDesc: "සංවර්ධකයින්, සිසුන් සහ අධ්‍යාපනඥයින් සඳහා සම්පූර්ණයෙන්ම සකස් කරන ලද වේගවත්, සැකසුම් රහිත මතක-තුළ MySQL ව්‍යාකරණ සිමියුලේටරයකි.",
+                aboutCreator: "භාෂණ සංදේශ් විසින් නිර්මාණය කරන ලදී",
+                feat1Title: "100% ක්ලයන්ට් පාර්ශ්වීය",
+                feat1Desc: "කිසිදු සේවාදායක යටිතල පහසුකම් අවශ්‍යතාවක් නොමැතිව පිරිසිදු JavaScript මතක ආචයනය භාවිතයෙන් සෘජුවම ඔබේ බ්‍රව්සරය තුළ ක්‍රියාත්මක වේ.",
+                feat2Title: "ඉගෙන ගන්න සහ පුරුදු වන්න",
+                feat2Desc: "මූලික SQL විධාන, සම්බන්ධතා ස්කීමා, දත්ත සමුදා සංචාලනය සහ වගු ව්‍යුහ හැසිරවීම් ආරක්ෂිතව ඉගෙන ගැනීම සඳහා වඩාත් සුදුසුය.",
+                feat3Title: "උසස් එන්ජිම",
+                feat3Desc: "සියලුම ප්‍රමිතිගත MySQL දත්ත වර්ග, ස්වයං-වැඩිවන හඳුනාගැනීම්, පරීක්ෂා බාධක සහ වර්ග කිරීමේ විධාන සඳහා බාධාවකින් තොරව සහය දක්වයි.",
+                footerAuthor: "Developed with &hearts; by Bhashana Sandesh",
+footerRights: "All Rights Reserved",
+contactModalTitle: "Contact Developer?",
+contactModalDesc: "Have questions or need help with SQLCraft? Chat with Bhashana Sandesh directly on WhatsApp!",
+btnCancel: "Cancel",
+btnChatWhatsapp: "Chat on WhatsApp"
+
+
+            }
+        };
+
+        let currentLang = 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('lang-si').classList.toggle('active', lang === 'si');
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+
+            const sqlInput = document.getElementById('sql-input');
+            if (lang === 'si') {
+                sqlInput.placeholder = "ඔබේ SQL විමසුම මෙහි ටයිප් කරන්න...";
+            } else {
+                sqlInput.placeholder = "Type your SQL query here...";
+            }
+
+            updateExplorer();
+        }
+
+        document.getElementById('sql-input').value = "";
+
+        function switchView(viewId, element) {
+            document.querySelectorAll('.view-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            if (element) {
+                element.classList.add('active');
+            }
+
+            if (viewId === 'explorer') {
+                updateExplorer();
+            }
+        }
+
+
+        function switchDatabaseFromExplorer(dbName) {
+            if (dbState.databases[dbName]) {
+                dbState.currentDb = dbName;
+                saveStateToStorage();
+                updateExplorer();
+            }
+        }
+
+        function runQuery() {
+            const rawInput = document.getElementById('sql-input').value;
+            const statusEl = document.getElementById('query-status');
+            const rowCountEl = document.getElementById('row-count');
+            const resultsContainer = document.getElementById('results-container');
+
+            const statements = rawInput.split(';').map(s => s.trim()).filter(s => s.length > 0);
+
+            if (statements.length === 0) {
+                statusEl.textContent = currentLang === 'si' ? "කරුණාකර විමසුමක් ඇතුළත් කරන්න." : "Please enter a query.";
+                statusEl.style.color = "var(--amber)";
+                return;
+            }
+
+            let lastOutput = null;
+
+            try {
+                for (let stmt of statements) {
+                    lastOutput = executeSingleStatement(stmt);
+                }
+
+                saveStateToStorage();
+                statusEl.textContent = currentLang === 'si' ? "විමසුම සාර්ථකව ක්‍රියාත්මක විය." : "Query executed successfully.";
+                statusEl.style.color = "var(--emerald)";
+                updateExplorer();
+
+                if (lastOutput && lastOutput.type === 'table') {
+                    renderTableResult(lastOutput.data, rowCountEl, resultsContainer);
+                } else if (lastOutput && lastOutput.type === 'message') {
+                    rowCountEl.textContent = "0 rows";
+                    resultsContainer.innerHTML = `<div style="padding: 20px; color: var(--emerald); font-size: 0.85rem;"><i class="fa-solid fa-circle-check"></i> ${lastOutput.text}</div>`;
+                } else {
+                    rowCountEl.textContent = "0 rows";
+                    resultsContainer.innerHTML = `<div class="empty-results"><i class="fa-solid fa-circle-check" style="color:var(--emerald);"></i><p>${currentLang === 'si' ? 'විධානය සාර්ථකව ක්‍රියාත්මක විය.' : 'Command executed successfully.'}</p></div>`;
+                }
+
+            } catch (err) {
+                statusEl.textContent = `Error: ${err.message}`;
+                statusEl.style.color = "var(--rose)";
+                rowCountEl.textContent = "0 rows";
+                resultsContainer.innerHTML = `
+                    <div style="padding: 20px; color: var(--rose); font-size: 0.8rem; font-family: monospace; display: flex; gap: 10px; background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.2);">
+                        <i class="fa-solid fa-triangle-exclamation" style="margin-top: 2px;"></i>
+                        <div><p style="font-weight:bold;">SQL Error</p><p>${err.message}</p></div>
+                    </div>
+                `;
+            }
+        }
+
+        function splitSqlDefs(str) {
+            let result = [];
+            let current = '';
+            let parenCount = 0;
+            for (let i = 0; i < str.length; i++) {
+                let char = str[i];
+                if (char === '(') parenCount++;
+                else if (char === ')') parenCount--;
+                
+                if (char === ',' && parenCount === 0) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            if (current.trim()) result.push(current);
+            return result;
+        }
+
+        function parseCheckCondition(condStr) {
+            const match = condStr.trim().match(/^([a-zA-Z0-9_]+)\s*(>=|<=|!=|=|>|<)\s*(.+)$/);
+            if (!match) return { raw: condStr, valid: false };
+            let val = match[3].trim().replace(/^['"]|['"]$/g, '');
+            if (!isNaN(val)) val = Number(val);
+            return { field: match[1], op: match[2], value: val, raw: condStr, valid: true };
+        }
+
+        function validateChecks(checks, rowData) {
+            if (!checks) return;
+            for (let check of checks) {
+                if (!check.valid) continue;
+                let val = rowData[check.field];
+                let target = check.value;
+                let passed = false;
+                switch (check.op) {
+                    case '>=': passed = (val >= target); break;
+                    case '<=': passed = (val <= target); break;
+                    case '>': passed = (val > target); break;
+                    case '<': passed = (val < target); break;
+                    case '=': passed = (val == target); break;
+                    case '!=': case '<>': passed = (val != target); break;
+                }
+                if (!passed) {
+                    throw new Error(`Check constraint violation: condition (${check.raw}) failed for value '${val}'.`);
+                }
+            }
+        }
+
+        function evaluateWhereClause(row, whereClauseStr) {
+            if (!whereClauseStr) return true;
+            let conditions = whereClauseStr.split(/\s+AND\s+/i);
+            
+            for (let cond of conditions) {
+                const match = cond.trim().match(/^([a-zA-Z0-9_]+)\s*(>=|<=|!=|=|>|<)\s*(.+)$/);
+                if (!match) continue;
+                let colName = match[1];
+                let operator = match[2];
+                let targetVal = match[3].trim().replace(/^['"]|['"]$/g, '');
+                if (!isNaN(targetVal)) targetVal = Number(targetVal);
+
+                let val = row[colName];
+                let passed = false;
+                switch (operator) {
+                    case '>': passed = (val > targetVal); break;
+                    case '<': passed = (val < targetVal); break;
+                    case '>=': passed = (val >= targetVal); break;
+                    case '<=': passed = (val <= targetVal); break;
+                    case '=': case '==': passed = (val == targetVal); break;
+                    case '!=': case '<>': passed = (val != targetVal); break;
+                }
+                if (!passed) return false;
+            }
+            return true;
+        }
+
+        function executeSingleStatement(sql) {
+            const upper = sql.trim().replace(/;\s*$/, '');
+            const tokens = upper.split(/\s+/);
+            const verb = tokens[0].toUpperCase();
+
+            if (upper === 'SHOW DATABASES') {
+                const dbs = Object.keys(dbState.databases).map(name => ({ Database: name }));
+                return { type: 'table', data: dbs.length > 0 ? dbs : [{ Database: 'No databases created yet' }] };
+            }
+
+            if (upper === 'SHOW TABLES') {
+                if (!dbState.currentDb) throw new Error("No database selected.");
+                const tables = Object.keys(dbState.databases[dbState.currentDb].tables).map(name => ({ Tables_in_db: name }));
+                return { type: 'table', data: tables.length > 0 ? tables : [{ Tables_in_db: 'No tables created yet' }] };
+            }
+
+            if (upper.startsWith('SHOW CREATE TABLE')) {
+                if (!dbState.currentDb) throw new Error("No database selected.");
+                const tableName = tokens[3]?.replace(/[`'"]/g, '');
+                if (!tableName) throw new Error("Missing table name.");
+                const db = dbState.databases[dbState.currentDb];
+                if (!db.tables[tableName]) throw new Error(`Table '${tableName}' doesn't exist.`);
+                
+                const t = db.tables[tableName];
+                let colDefs = t.columns.map(c => `  \`${c.name}\` ${c.type}${c.auto_increment ? ' AUTO_INCREMENT' : ''}`).join(',\n');
+                let checkDefs = t.checks && t.checks.length > 0 ? ',\n' + t.checks.map(ch => `  CHECK (${ch.raw})`).join(',\n') : '';
+                let createStmt = `CREATE TABLE \`${tableName}\` (\n${colDefs}${checkDefs}\n)`;
+                return { type: 'table', data: [{ Table: tableName, 'Create Table': createStmt }] };
+            }
+
+            if (verb === 'DESCRIBE' || verb === 'DESC') {
+                if (!dbState.currentDb) throw new Error("No database selected.");
+                const tableName = tokens[1]?.replace(/[`'"]/g, '');
+                if (!tableName) throw new Error("Missing table name.");
+                const db = dbState.databases[dbState.currentDb];
+                if (!db.tables[tableName]) throw new Error(`Table '${tableName}' doesn't exist.`);
+                
+                const t = db.tables[tableName];
+                let descData = t.columns.map(c => ({
+                    Field: c.name,
+                    Type: c.type,
+                    Null: 'YES',
+                    Key: c.auto_increment ? 'PRI' : '',
+                    Default: 'NULL',
+                    Extra: c.auto_increment ? 'auto_increment' : ''
+                }));
+                return { type: 'table', data: descData };
+            }
+
+            if (verb === 'CREATE' && tokens[1]?.toUpperCase() === 'DATABASE') {
+                const dbName = tokens[2]?.replace(/[`'"]/g, '');
+                if (!dbName) throw new Error("Missing database name.");
+                if (!dbState.databases[dbName]) {
+                    dbState.databases[dbName] = { tables: {} };
+                }
+                if (!dbState.currentDb) dbState.currentDb = dbName;
+                return { type: 'message', text: `Database '${dbName}' created successfully.` };
+            }
+
+            if (verb === 'DROP' && tokens[1]?.toUpperCase() === 'DATABASE') {
+                const dbName = tokens[2]?.replace(/[`'"]/g, '');
+                if (!dbName) throw new Error("Missing database name.");
+                if (!dbState.databases[dbName]) throw new Error(`Database '${dbName}' does not exist.`);
+                delete dbState.databases[dbName];
+                if (dbState.currentDb === dbName) {
+                    dbState.currentDb = Object.keys(dbState.databases)[0] || null;
+                }
+                return { type: 'message', text: `Database '${dbName}' dropped successfully.` };
+            }
+
+            if (verb === 'USE') {
+                const dbName = tokens[1]?.replace(/[`'"]/g, '');
+                if (!dbState.databases[dbName]) throw new Error(`Database '${dbName}' does not exist.`);
+                dbState.currentDb = dbName;
+                return { type: 'message', text: `Switched to database '${dbName}'.` };
+            }
+
+            if (!dbState.currentDb || !dbState.databases[dbState.currentDb]) {
+                throw new Error("No database selected. Run 'USE db_name;' first.");
+            }
+            const currentDbObj = dbState.databases[dbState.currentDb];
+
+            if (verb === 'DROP' && tokens[1]?.toUpperCase() === 'TABLE') {
+                const tableName = tokens[2]?.replace(/[`'"]/g, '');
+                if (!tableName) throw new Error("Missing table name.");
+                if (!currentDbObj.tables[tableName]) throw new Error(`Table '${tableName}' not found.`);
+                delete currentDbObj.tables[tableName];
+                return { type: 'message', text: `Table '${tableName}' dropped successfully.` };
+            }
+
+            if (verb === 'ALTER' && tokens[1]?.toUpperCase() === 'TABLE') {
+                const tableName = tokens[2]?.replace(/[`'"]/g, '');
+                if (!currentDbObj.tables[tableName]) throw new Error(`Table '${tableName}' not found.`);
+                const table = currentDbObj.tables[tableName];
+                const action = tokens[3]?.toUpperCase();
+
+                if (action === 'ADD') {
+                    let colName = tokens[4]?.replace(/[`'"]/g, '');
+                    let colType = tokens[5] || 'TEXT';
+                    if (!colName) throw new Error("Missing column name in ALTER TABLE ADD.");
+                    if (table.columns.some(c => c.name === colName)) throw new Error(`Column '${colName}' already exists.`);
+                    
+                    table.columns.push({ name: colName, type: colType, auto_increment: false });
+                    table.rows.forEach(r => r[colName] = null);
+                    return { type: 'message', text: `Query OK, table '${tableName}' altered (ADD COLUMN).` };
+                } else if (action === 'MODIFY') {
+                    let colName = tokens[4]?.replace(/[`'"]/g, '');
+                    let colType = tokens[5] || 'TEXT';
+                    if (!colName) throw new Error("Missing column name in ALTER TABLE MODIFY.");
+                    let col = table.columns.find(c => c.name === colName);
+                    if (!col) throw new Error(`Column '${colName}' not found in table '${tableName}'.`);
+                    
+                    col.type = colType;
+                    return { type: 'message', text: `Query OK, table '${tableName}' altered (MODIFY COLUMN).` };
+                } else if (action === 'DROP' || action === 'DROP COLUMN') {
+                    let colName = '';
+                    if (action === 'DROP' && tokens[4]?.toUpperCase() === 'COLUMN') {
+                        colName = tokens[5]?.replace(/[`'"]/g, '');
+                    } else {
+                        colName = tokens[4]?.replace(/[`'"]/g, '');
+                    }
+                    if (!colName) throw new Error("Missing column name in ALTER TABLE DROP.");
+                    let colIndex = table.columns.findIndex(c => c.name === colName);
+                    if (colIndex === -1) throw new Error(`Column '${colName}' not found in table '${tableName}'.`);
+                    
+                    table.columns.splice(colIndex, 1);
+                    table.rows.forEach(r => delete r[colName]);
+                    return { type: 'message', text: `Query OK, table '${tableName}' altered (DROP COLUMN).` };
+                } else {
+                    throw new Error(`Unsupported ALTER action: ${action}`);
+                }
+            }
+
+            if (verb === 'CREATE' && tokens[1]?.toUpperCase() === 'TABLE') {
+                const tableName = tokens[2].replace(/[\(`']/g, '');
+                const matchCols = upper.match(/\(([\s\S]*)\)/);
+                if (!matchCols) throw new Error("Invalid table definition syntax.");
+                
+                const defs = splitSqlDefs(matchCols[1]);
+                const columns = [];
+                const checks = [];
+                const primaryKeys = [];
+                const foreignKeys = [];
+
+                defs.forEach(def => {
+                    const trimmed = def.trim();
+                    const upperTrimmed = trimmed.toUpperCase();
+                    
+                    if (upperTrimmed.startsWith('CHECK')) {
+                        const checkMatch = trimmed.match(/CHECK\s*\((.*)\)/i);
+                        if (checkMatch) {
+                            checks.push(parseCheckCondition(checkMatch[1]));
+                        }
+                    } else if (upperTrimmed.startsWith('PRIMARY KEY')) {
+                        const match = trimmed.match(/PRIMARY\s+KEY\s*\(([^)]+)\)/i);
+                        if (match) {
+                            match[1].split(',').forEach(c => primaryKeys.push(c.trim().replace(/[`']/g, '')));
+                        }
+                    } else if (upperTrimmed.includes('FOREIGN KEY')) {
+                        const match = trimmed.match(/FOREIGN\s+KEY\s*\(([^)]+)\)\s*REFERENCES\s+([a-zA-Z0-9_]+)\s*\(([^)]+)\)/i);
+                        if (match) {
+                            foreignKeys.push({
+                                column: match[1].trim().replace(/[`']/g, ''),
+                                referencesTable: match[2].trim().replace(/[`']/g, ''),
+                                referencesColumn: match[3].trim().replace(/[`']/g, '')
+                            });
+                        }
+                    } else {
+                        let parts = trimmed.replace(/[`']/g, '').split(/\s+/);
+                        let colName = parts[0];
+                        let colType = parts[1] || 'TEXT';
+                        let isAutoInc = upperTrimmed.includes('AUTO_INCREMENT');
+                        let isPrimary = upperTrimmed.includes('PRIMARY KEY');
+                        
+                        if (isPrimary) primaryKeys.push(colName);
+
+                        columns.push({ 
+                            name: colName, 
+                            type: colType, 
+                            auto_increment: isAutoInc,
+                            is_primary: isPrimary,
+                            is_foreign: false 
+                        });
+                    }
+                });
+
+                columns.forEach(col => {
+                    if (primaryKeys.includes(col.name)) col.is_primary = true;
+                    let fk = foreignKeys.find(f => f.column === col.name);
+                    if (fk) {
+                        col.is_foreign = true;
+                        col.fk_ref = fk;
+                    }
+                });
+
+                currentDbObj.tables[tableName] = { columns, rows: [], checks, autoIncrement: 1 };
+                return { type: 'message', text: `Table '${tableName}' created successfully.` };
+            }
+
+            if (verb === 'INSERT' && tokens[1]?.toUpperCase() === 'INTO') {
+                const tableName = tokens[2]?.replace(/[`'"]/g, '');
+                if (!currentDbObj.tables[tableName]) throw new Error(`Table '${tableName}' not found.`);
+                const table = currentDbObj.tables[tableName];
+
+                let valuesIdx = upper.indexOf('VALUES');
+                if (valuesIdx === -1) throw new Error("Missing VALUES clause.");
+                
+                let insertHeader = upper.substring(0, valuesIdx);
+                let colListMatch = insertHeader.match(/\(([\s\S]*)\)/);
+                
+                const matchVals = upper.match(/VALUES\s*\((.*)\)/i);
+                if (!matchVals) throw new Error("Invalid INSERT syntax.");
+                
+                const rawValsStr = matchVals[1];
+                let rawVals = [];
+                let inQuote = false;
+                let currentVal = '';
+                
+                for (let i = 0; i < rawValsStr.length; i++) {
+                    let char = rawValsStr[i];
+                    if (char === "'" || char === '"') {
+                        inQuote = !inQuote;
+                    } else if (char === ',' && !inQuote) {
+                        rawVals.push(currentVal.trim().replace(/^['"]|['"]$/g, ''));
+                        currentVal = '';
+                        continue;
+                    }
+                    currentVal += char;
+                }
+                if (currentVal.trim()) {
+                    rawVals.push(currentVal.trim().replace(/^['"]|['"]$/g, ''));
+                }
+
+                let rowObj = {};
+                let autoIncCol = table.columns.find(c => c.auto_increment);
+
+                if (colListMatch) {
+                    let targetCols = colListMatch[1].split(',').map(c => c.trim().replace(/[`'"]/g, ''));
+                    if (targetCols.length !== rawVals.length) {
+                        throw new Error(`Column count mismatch: ${targetCols.length} columns specified, but ${rawVals.length} values provided.`);
+                    }
+
+                    table.columns.forEach(col => {
+                        if (col.auto_increment) {
+                            rowObj[col.name] = table.autoIncrement++;
+                        } else {
+                            rowObj[col.name] = null;
+                        }
+                    });
+
+                    targetCols.forEach((cName, idx) => {
+                        let colDef = table.columns.find(c => c.name === cName);
+                        if (!colDef) throw new Error(`Column '${cName}' does not exist in table '${tableName}'.`);
+                        let val = rawVals[idx];
+                        rowObj[cName] = isNaN(val) ? val : Number(val);
+                        if (colDef.auto_increment && typeof rowObj[cName] === 'number' && rowObj[cName] >= table.autoIncrement) {
+                            table.autoIncrement = rowObj[cName] + 1;
+                        }
+                    });
+                } else {
+                    if (autoIncCol && rawVals.length === table.columns.length - 1) {
+                        rowObj[autoIncCol.name] = table.autoIncrement++;
+                        let valIdx = 0;
+                        table.columns.forEach(col => {
+                            if (col.name !== autoIncCol.name) {
+                                let val = rawVals[valIdx++];
+                                rowObj[col.name] = isNaN(val) ? val : Number(val);
+                            }
+                        });
+                    } else {
+                        if (rawVals.length !== table.columns.length) {
+                            throw new Error(`Column count mismatch: table has ${table.columns.length} columns, but ${rawVals.length} values provided.`);
+                        }
+                        table.columns.forEach((col, idx) => {
+                            let val = rawVals[idx];
+                            let parsedVal = isNaN(val) ? val : Number(val);
+                            rowObj[col.name] = parsedVal;
+                            if (col.auto_increment && typeof parsedVal === 'number' && parsedVal >= table.autoIncrement) {
+                                table.autoIncrement = parsedVal + 1;
+                            }
+                        });
+                    }
+                }
+
+                validateChecks(table.checks, rowObj);
+                table.rows.push(rowObj);
+                return { type: 'message', text: `1 row inserted into '${tableName}'.` };
+            }
+
+            if (verb === 'UPDATE') {
+                const tableName = tokens[1]?.replace(/[`'"]/g, '');
+                if (!currentDbObj.tables[tableName]) throw new Error(`Table '${tableName}' not found.`);
+                const table = currentDbObj.tables[tableName];
+                
+                const setIdx = tokens.findIndex(t => t.toUpperCase() === 'SET');
+                const whereIdx = tokens.findIndex(t => t.toUpperCase() === 'WHERE');
+                if (setIdx === -1) throw new Error("Missing SET clause.");
+                
+                let setPartEnd = whereIdx !== -1 ? whereIdx : tokens.length;
+                let setTokens = tokens.slice(setIdx + 1, setPartEnd).join(' ');
+                let assignments = setTokens.split(',');
+                
+                let updateCols = {};
+                assignments.forEach(assign => {
+                    let [cName, cVal] = assign.split('=').map(s => s.trim().replace(/[`'"]/g, ''));
+                    if (!isNaN(cVal)) cVal = Number(cVal);
+                    updateCols[cName] = cVal;
+                });
+
+                let affectedCount = 0;
+                table.rows.forEach(row => {
+                    let match = true;
+                    if (whereIdx !== -1) {
+                        let whereClauseStr = tokens.slice(whereIdx + 1).join(' ');
+                        match = evaluateWhereClause(row, whereClauseStr);
+                    }
+                    if (match) {
+                        let simulatedRow = { ...row };
+                        Object.keys(updateCols).forEach(c => { simulatedRow[c] = updateCols[c]; });
+                        validateChecks(table.checks, simulatedRow);
+
+                        Object.keys(updateCols).forEach(c => { row[c] = updateCols[c]; });
+                        affectedCount++;
+                    }
+                });
+                return { type: 'message', text: `Query OK, ${affectedCount} row(s) affected.` };
+            }
+
+            if (verb === 'DELETE' && tokens[1]?.toUpperCase() === 'FROM') {
+                const tableName = tokens[2]?.replace(/[`'"]/g, '');
+                if (!currentDbObj.tables[tableName]) throw new Error(`Table '${tableName}' not found.`);
+                const table = currentDbObj.tables[tableName];
+                
+                const whereIdx = tokens.findIndex(t => t.toUpperCase() === 'WHERE');
+                let initialLen = table.rows.length;
+                
+                if (whereIdx === -1) {
+                    table.rows = [];
+                    return { type: 'message', text: `Query OK, ${initialLen} row(s) deleted.` };
+                } else {
+                    let whereClauseStr = tokens.slice(whereIdx + 1).join(' ');
+                    table.rows = table.rows.filter(row => !evaluateWhereClause(row, whereClauseStr));
+                    let deletedCount = initialLen - table.rows.length;
+                    return { type: 'message', text: `Query OK, ${deletedCount} row(s) deleted.` };
+                }
+            }
+
+            if (verb === 'SELECT') {
+                const fromIdx = tokens.findIndex(t => t.toUpperCase() === 'FROM');
+                if (fromIdx === -1) throw new Error("Missing FROM clause.");
+                
+                let selectPart = tokens.slice(1, fromIdx).join(' ');
+                let requestedCols = selectPart.split(',').map(s => s.trim().replace(/[`'"]/g, ''));
+
+                const tableName = tokens[fromIdx + 1]?.replace(/[`'"]/g, '');
+                if (!currentDbObj.tables[tableName]) throw new Error(`Table '${tableName}' not found.`);
+
+                let table = currentDbObj.tables[tableName];
+                let results = [...table.rows];
+
+                const whereIdx = tokens.findIndex(t => t.toUpperCase() === 'WHERE');
+                const orderByIdx = tokens.findIndex(t => t.toUpperCase() === 'ORDER');
+                const limitIdx = tokens.findIndex(t => t.toUpperCase() === 'LIMIT');
+
+                if (whereIdx !== -1) {
+                    let endWhereIdx = orderByIdx !== -1 ? orderByIdx : (limitIdx !== -1 ? limitIdx : tokens.length);
+                    let whereClauseStr = tokens.slice(whereIdx + 1, endWhereIdx).join(' ');
+                    results = results.filter(row => evaluateWhereClause(row, whereClauseStr));
+                }
+
+                if (orderByIdx !== -1) {
+                    const orderCol = tokens[orderByIdx + 2]?.replace(/[`'"]/g, '');
+                    const direction = (tokens[orderByIdx + 3] || 'ASC').toUpperCase();
+                    if (orderCol) {
+                        results.sort((a, b) => {
+                            let valA = a[orderCol];
+                            let valB = b[orderCol];
+                            if (valA < valB) return direction === 'DESC' ? 1 : -1;
+                            if (valA > valB) return direction === 'DESC' ? -1 : 1;
+                            return 0;
+                        });
+                    }
+                }
+
+                if (limitIdx !== -1) {
+                    const limitVal = parseInt(tokens[limitIdx + 1], 10);
+                    if (!isNaN(limitVal)) {
+                        results = results.slice(0, limitVal);
+                    }
+                }
+
+                if (!(requestedCols.length === 1 && requestedCols[0] === '*')) {
+                    results = results.map(row => {
+                        let projected = {};
+                        requestedCols.forEach(c => {
+                            if (row[c] !== undefined) {
+                                projected[c] = row[c];
+                            } else {
+                                projected[c] = null;
+                            }
+                        });
+                        return projected;
+                    });
+                }
+
+                return { type: 'table', data: results };
+            }
+
+            throw new Error(`Unrecognized or unsupported statement: ${sql}`);
+        }
+
+        function renderTableResult(data, rowCountEl, container) {
+            if (!data || data.length === 0) {
+                rowCountEl.textContent = "0 rows";
+                container.innerHTML = `<div class="empty-results"><i class="fa-solid fa-circle-check" style="color:var(--emerald);"></i><p>${currentLang === 'si' ? 'විමසුම මඟින් පේළි 0 ක් ලබා දෙන ලදී.' : 'Query returned 0 rows.'}</p></div>`;
+                return;
+            }
+
+            rowCountEl.textContent = `${data.length} row${data.length > 1 ? 's' : ''}`;
+            const columns = Object.keys(data[0]);
+
+            let html = `<table><thead><tr>`;
+            columns.forEach(col => html += `<th>${col}</th>`);
+            html += `</tr></thead><tbody>`;
+
+            data.forEach(row => {
+                html += `<tr>`;
+                columns.forEach(col => html += `<td>${row[col] !== undefined && row[col] !== null ? row[col] : 'NULL'}</td>`);
+                html += `</tr>`;
+            });
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function clearEditor() {
+            document.getElementById('sql-input').value = '';
+            document.getElementById('sql-input').focus();
+        }
+        
+      
+function openContactModal() {
+    document.getElementById('contact-modal').style.display = 'flex';
+}
+
+function closeContactModal() {
+    document.getElementById('contact-modal').style.display = 'none';
+}
+
+
+      
+document.getElementById('current-year').textContent = new Date().getFullYear();
+
+
+      
+        updateExplorer();
+    </script>
+</body>
+</html>
