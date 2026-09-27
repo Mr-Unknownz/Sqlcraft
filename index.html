@@ -1935,37 +1935,40 @@ function closeContactModal() {
     document.getElementById('contact-modal').style.display = 'none';
 }
 
-// GitHub Updates Checker
 async function checkForGitHubUpdates() {
-    // 👇 මෙතනට ඔබේ GitHub Username එක සහ Repository නම දාන්න
     const githubUser = 'Mr-Unknownz'; 
     const repoName = 'Sqlcraft'; 
-    
-    const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/commits?per_page=1`;
+    const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/commits?per_page=100`;
 
     try {
         let response = await fetch(apiUrl);
-        if (!response.ok) return;
+        if (!response.status === 200) return;
         
         let commits = await response.json();
         if (commits && commits.length > 0) {
             let latestCommitSha = commits[0].sha;
             let commitMessage = commits[0].commit.message;
+            let totalCommits = commits.length; 
             
-            // LocalStorage එකේ කලින් save කරපු commit SHA එක ලබා ගැනීම
+            // --- Version Calculation Logic ---
+            // 1. දැනට ඔයාලගේ repository එකේ මුළු commit ගණන කීයද කියලා මෙතනට දාන්න (උදාහරණයක් ලෙස දැන් commits 12 ක් තියෙනවා නම් 12 දාන්න)
+            const referenceTotalCommits = totalCommits; // (පළමු වතාවට මේක run වෙද්දී දැනට ඇති ගණනම මෙයට ගනියි)
+            const basePatchNumber = 5; // අපිට පටන් ගන්න ඕන 1.0.5 වල '5' සිටයි
+            
+            // මෙයින් ඉදිරියට කරන සෑම අලුත් commit එකකටම ස්වයංක්‍රීයව +1 ක් එකතු වේ
+            let patchNumber = basePatchNumber + (totalCommits - referenceTotalCommits);
+            let dynamicVersion = `V1.0.${patchNumber}`;
+            // ---------------------------------
+            
+            // Footer එකේ version එක update වීම
+            document.getElementById('footer-version').textContent = dynamicVersion;
+
             let savedSha = localStorage.getItem('sqlcraft_latest_sha');
 
             if (!savedSha) {
-                // මුල් වතාවට site එකට එන විට
                 localStorage.setItem('sqlcraft_latest_sha', latestCommitSha);
             } else if (savedSha !== latestCommitSha) {
-                // 🚀 අලුත් commit එකක් / update එකක් github එකට දී ඇත!
-                showUpdatePopup(commitMessage);
-                
-                // Version එක ස්වයංක්‍රීයව වෙනස් කිරීම (අවශ්‍ය නම් වෙනස් කරගත හැක)
-                document.getElementById('footer-version').textContent = "V1.0.6 (New)";
-                
-                // අලුත් SHA එක save කරගැනීම (නැවත නැවත notification නොපෙන්වීම පිණිස)
+                showUpdatePopup(commitMessage, dynamicVersion);
                 localStorage.setItem('sqlcraft_latest_sha', latestCommitSha);
             }
         }
@@ -1973,6 +1976,7 @@ async function checkForGitHubUpdates() {
         console.log("Could not check for updates:", error);
     }
 }
+
 
 // Update Notification Popup එක පෙන්වීම
 function showUpdatePopup(msg) {
