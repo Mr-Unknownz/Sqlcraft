@@ -1942,7 +1942,7 @@ async function checkForGitHubUpdates() {
 
     try {
         let response = await fetch(apiUrl);
-        if (!response.status === 200) return;
+        if (response.status !== 200) return; // මෙතැන වැරැද්ද නිවැරදි කරන ලදී
         
         let commits = await response.json();
         if (commits && commits.length > 0) {
@@ -1951,16 +1951,14 @@ async function checkForGitHubUpdates() {
             let totalCommits = commits.length; 
             
             // --- Version Calculation Logic ---
-            // 1. දැනට ඔයාලගේ repository එකේ මුළු commit ගණන කීයද කියලා මෙතනට දාන්න (උදාහරණයක් ලෙස දැන් commits 12 ක් තියෙනවා නම් 12 දාන්න)
-            const referenceTotalCommits = totalCommits; // (පළමු වතාවට මේක run වෙද්දී දැනට ඇති ගණනම මෙයට ගනියි)
-            const basePatchNumber = 5; // අපිට පටන් ගන්න ඕන 1.0.5 වල '5' සිටයි
+            // ඔයාගේ repository එකේ මුල් version 1.0.5 හදනකොට තිබුණු සම්පූර්ණ commit ගණන මෙතැනට දෙන්න (උදා: 12)
+            const referenceTotalCommits = 12; // මෙතැන ඔයාගේ ትክක්ලී commit ගණන දාන්න
+            const basePatchNumber = 5; 
             
-            // මෙයින් ඉදිරියට කරන සෑම අලුත් commit එකකටම ස්වයංක්‍රීයව +1 ක් එකතු වේ
-            let patchNumber = basePatchNumber + (totalCommits - referenceTotalCommits);
+            let patchNumber = basePatchNumber + Math.max(0, totalCommits - referenceTotalCommits);
             let dynamicVersion = `V1.0.${patchNumber}`;
             // ---------------------------------
             
-            // Footer එකේ version එක update වීම
             document.getElementById('footer-version').textContent = dynamicVersion;
 
             let savedSha = localStorage.getItem('sqlcraft_latest_sha');
@@ -1976,6 +1974,7 @@ async function checkForGitHubUpdates() {
         console.log("Could not check for updates:", error);
     }
 }
+
 
 
 // Update Notification Popup එක පෙන්වීම
