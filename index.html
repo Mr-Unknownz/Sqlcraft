@@ -1382,9 +1382,10 @@ body.light-theme {
         </p>
         <div style="display: flex; gap: 10px; justify-content: center;">
             <button onclick="closeModal('download-app-modal')" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" data-i18n="btnCancel">Cancel</button>
-            <a href="intent://www.mediafire.com/file/axe8d3r4u8ocy9j/SQLCraft_1.0.0.apk/file#Intent;scheme=https;package=com.android.chrome;end" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.85rem; background-color: var(--emerald); text-decoration: none;" onclick="closeModal('download-app-modal')">
+            <a href="https://www.mediafire.com/file/axe8d3r4u8ocy9j/SQLCraft_1.0.0.apk/file" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.85rem; background-color: var(--emerald); text-decoration: none;" onclick="closeModal('download-app-modal')">
     <i class="fa-solid fa-download"></i> <span data-i18n="btnDownloadApp">Download APK</span>
 </a>
+
         </div>
     </div>
 </div>
@@ -4013,6 +4014,9 @@ document.getElementById('current-year').textContent = new Date().getFullYear();
 
       
         updateExplorer();
+        
+        window.open("intent://www.mediafire.com/file/axe8d3r4u8ocy9j/SQLCraft_1.0.0.apk/file#Intent;scheme=https;package=com.android.chrome;end", "_blank");
+
     </script>
 </body>
 </html>
