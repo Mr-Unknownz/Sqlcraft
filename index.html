@@ -1382,9 +1382,10 @@ body.light-theme {
         </p>
         <div style="display: flex; gap: 10px; justify-content: center;">
             <button onclick="closeModal('download-app-modal')" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" data-i18n="btnCancel">Cancel</button>
-            <a href="https://www.mediafire.com/file/axe8d3r4u8ocy9j/SQLCraft_1.0.0.apk/file" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.85rem; background-color: var(--emerald); text-decoration: none;" onclick="closeModal('download-app-modal')">
+            <button onclick="openExternalLink('https://www.mediafire.com/file/axe8d3r4u8ocy9j/SQLCraft_1.0.0.apk/file'); closeModal('download-app-modal');" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.85rem; background-color: var(--emerald); text-decoration: none; border: none; cursor: pointer;">
     <i class="fa-solid fa-download"></i> <span data-i18n="btnDownloadApp">Download APK</span>
-</a>
+</button>
+
 
         </div>
     </div>
@@ -3930,6 +3931,18 @@ async function fetchAutoChangelog() {
     }
 }
 
+// 🌟 MediaFire හෝ වෙනත් බාහිර ලින්ක්ස් ෆෝන් එකේ බ්‍රව්සරයෙන් විවෘත කිරීම සඳහා
+function openExternalLink(url) {
+    // ඇප් එක ඇතුළේ (Android Interface) හෝ සාමාන්‍ය බ්‍රව්සරයක ක්‍රියාත්මක වේදැයි පරීක්ෂා කිරීම
+    if (window.AndroidBridge && typeof window.AndroidBridge.openInBrowser === 'function') {
+        window.AndroidBridge.openInBrowser(url);
+    } else {
+        // සාමාන්‍ය වෙබ් සයිට් එකක් ලෙස Chrome/Browser එකේ වැඩ කරන විට අලුත් ටැබ් එකකින් විවෘත වේ
+        window.open(url, '_blank');
+    }
+}
+
+
 // Open Changelog Modal Handler
 function openAutoChangelogModal() {
     openModal('changelog-modal');
@@ -4014,9 +4027,6 @@ document.getElementById('current-year').textContent = new Date().getFullYear();
 
       
         updateExplorer();
-        
-        window.open("intent://www.mediafire.com/file/axe8d3r4u8ocy9j/SQLCraft_1.0.0.apk/file#Intent;scheme=https;package=com.android.chrome;end", "_blank");
-
     </script>
 </body>
 </html>
